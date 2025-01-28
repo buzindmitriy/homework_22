@@ -1,22 +1,54 @@
-from django.shortcuts import render
 from django.http import HttpResponse
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView, DeleteView
 
-def home_view(request):
-    return render(request, 'home.html')
-
-
-def contacts_view(request):
-    return render(request, 'contacts.html')
+from catalog.models import Product
+from .forms import ProductForm
 
 
-def contact(request):
-    if request.method == 'POST':
-        # Получение данных из формы
-        name = request.POST.get('name')
-        message = request.POST.get('message')
-        # Обработка данных (например, сохранение в БД, отправка email и т. д.)
-        print(name)
-        print(message)
-        # Здесь мы просто возвращаем простой ответ
-        return HttpResponse(f"Спасибо, {name}! Ваше сообщение получено.")
-    return render(request, 'contact.html')
+class ProductListView(ListView):
+    model = Product
+    paginate_by = 3  # Количество продуктов на странице
+    template_name = 'catalog/products_list.html'  # Имя шаблона для отображения списка продуктов
+    context_object_name = 'products'
+
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = 'catalog/product_detail.html'
+    context_object_name = 'product'
+
+
+class ContactTemplateView(TemplateView):
+    template_name = 'catalog/contacts.html'
+
+    def get_context_data(self, **kwargs):
+        if self.request.method == 'POST':
+            name = self.request.POST.get('name')
+            phone = self.request.POST.get('phone')
+            message = self.request.POST.get('message')
+            print(name)
+            print(phone)
+            print(message)
+            return HttpResponse('Сообщение отправлено!')
+
+
+class ProductCreateView(CreateView):
+    model = Product
+    form_class = ProductForm
+    template_name = 'catalog/product_form.html'
+    success_url = reverse_lazy('catalog:home')
+
+
+class ProductUpdateView(UpdateView):
+    model = Product
+    form_class = ProductForm
+    template_name = 'catalog/product_form.html'
+    success_url = reverse_lazy('catalog:home')
+
+
+class ProductDeleteView(DeleteView):
+    model = Product
+    template_name = 'catalog/product_delete_confirm.html'
+    success_url = reverse_lazy('catalog:home')
+    context_object_name = 'product'
